@@ -34,9 +34,6 @@ services:
       - app_php
     links:
       - app_php:php
-    # expose: 
-      # - 80
-      # - 443
     ports:
       - ${WEB_PORT}:80
     volumes:
