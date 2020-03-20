@@ -1,0 +1,22 @@
+name: Docker image CI
+
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+    
+env:
+  HOOK_URL: https://hooks.slack.com/services/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
+  REPO_NAME: Docker-Dev
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Send cahtwork from gitlog
+      run: |
+        git log --numstat -m -1 --date=iso --pretty='[%ad] %h %an : %s' > gitlog.txt
+        curl -X POST --data-urlencode "payload={\"channel\": \"#github_aciton\", \"username\": \"github_aciton_bot\", \"text\": \"${REPO_NAME} masterブランチが更新されました。 `cat gitlog.txt`\", \"icon_emoji\": \":github_icon:\"}" ${HOOK_URL}
+
+        
