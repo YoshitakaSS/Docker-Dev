@@ -35,6 +35,7 @@ xdebug.remote_connect_back = XDEBUG_REMOTE_CONNECT_BACK\n\
 WORKDIR /var/www/dev-web
 
 RUN composer global require "laravel/installer"
+RUN composer require --dev barryvdh/laravel-debugbar
 
 # RUN /usr/sbin/setenforce Permissive
 
