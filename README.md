@@ -26,3 +26,15 @@
 
 ### Redis Container
 - Base: redis:latest
+
+
+### About CI Actions
+
+A git log will be sent to slack when the master branch is updated
+
+If you want to specify the destination of Slack,Set Actions secrets.
+
+1. Settings
+2. Secrets
+3. New Repository Seacret 
+4. Add name: `SLACK_WEBHOOK` value: `your slack webhook url`
