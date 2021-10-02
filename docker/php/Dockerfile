@@ -18,4 +18,4 @@ COPY ./docker/php/php-fpm.d/php-fpm.conf /usr/local/etc/php-fpm.d/zzz-www.conf
 COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
 
 EXPOSE 9000
-WORKDIR /var/www/contract-management
+WORKDIR /var/www/
