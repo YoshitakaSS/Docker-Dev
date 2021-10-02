@@ -1,61 +1,57 @@
-version: "3"
+version: "3.9"
 
-############
-# 基盤
-############
+volumes:
+  php-fpm-socket:
+  db-store:
+  db-logs-store:
+
 services:
-  app_php:
+  php:
     build:
-      context: ./docker/php
-      args:
-        - XDEBUG_IDEKEY=${XDEBUG_IDEKEY}
-        - XDEBUG_REMOTE_HOST=${XDEBUG_REMOTE_HOST}
-        - XDEBUG_REMOTE_CONNECT_BACK=${XDEBUG_REMOTE_CONNECT_BACK}
-    container_name: "app_php"
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: php
     volumes:
-      - ${SRC_DIR}:/var/www/dev-web/:z
-      - ./logs/php/:/var/log/php/error.log
-    environment:
-      - TZ="Asia/Tokyo"
-    tty: true
-    command: >
-        bash -c "php-fpm"
-    depends_on:
-      - app_db
+      - type: volume
+        source: php-fpm-socket
+        target: /var/run/php-fpm
+        volume:
+          nocopy: true
+      - type: bind
+        source: ./src
+        target: /var/www/
 
-  app_nginx:
-    build: 
-      context: ./docker/nginx
-      args:
-        - VIRTUAL_HOST=${VIRTUAL_HOST}
-    container_name: "app_nginx"
-    hostname: "app-nginx"
-    depends_on:
-      - app_php
-    links:
-      - app_php:php
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    container_name: nginx
     ports:
-      - ${WEB_PORT}:80
+      - 80:80
     volumes:
-      - ${SRC_DIR}:/var/www/dev-web:z
-      - ./logs/nginx:/var/log/nginx
-      - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
-    environment:
-      - TZ="Asia/Tokyo"
-      - VIRTUAL_HOST=${VIRTUAL_HOST}
+      - type: volume
+        source: php-fpm-socket
+        target: /var/run/php-fpm/
+        volume:
+          nocopy: true
+      - type: bind
+        source: ./src
+        target: /var/www/
+    restart: always
 
-  app_db:
-    image: mysql:5.7
-    container_name: "app_db"
+  db:
+    image: mysql:8.0
+    container_name: database
+    ports:
+      -  "3308:3306"
     volumes:
-      - ./logs/mysql:/var/log/mysql
-      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      -  ./docker/db/my.conf:/etc/mysql/conf.d/my.cnf
     environment:
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_PASS}
-      - TZ="Asia/Tokyo"
-    ports:
-      - ${DB_PORT}:3306
+
+  redis:
+    image: "redis:latest"
+    container_name: redis

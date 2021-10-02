@@ -1,44 +1,21 @@
-FROM php:7.3-fpm
+FROM php:8.0-fpm-buster
 
-COPY php.ini /usr/local/etc/php/
-
-RUN apt-get update \
-  && apt-get install -y zlib1g-dev mariadb-client libzip-dev libxml2-dev unzip \
-  && docker-php-ext-install zip pdo_mysql \
-  && docker-php-ext-install zip 
-
-#Composer install
+# latest
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set composer environment
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_HOME /composer
-ENV PATH $PATH:/composer/vendor/bin
+RUN apt-get update && \
+    apt-get -y install git libicu-dev libonig-dev libzip-dev unzip locales libfontconfig1 libfontconfig1 libxrender-dev fonts-ipafont libxext-dev && \
+    apt-get clean && \
+    pecl install xdebug && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir /var/run/php-fpm && \
+    docker-php-ext-install intl pdo_mysql zip bcmath && \
+    docker-php-ext-enable xdebug && \
+    composer config -g process-timeout 3600 && \
+    composer config -g repos.packagist composer https://packagist.org
 
-ARG XDEBUG_IDEKEY
-ARG XDEBUG_REMOTE_HOST
-ARG XDEBUG_REMOTE_CONNECT_BACK
+COPY ./docker/php/php-fpm.d/php-fpm.conf /usr/local/etc/php-fpm.d/zzz-www.conf
+COPY ./docker/php/php.ini /usr/local/etc/php/php.ini
 
-RUN echo 'xdebug.var_display_max_children = -1\n\
-xdebug.var_display_max_data = -1\n\
-xdebug.var_display_max_depth = -1\n\
-xdebug.idekey = "XDEBUG_IDEKEY"\n\
-xdebug.remote_enable = 1\n\
-xdebug.remote_autostart = 1\n\
-xdebug.remote_host = "XDEBUG_REMOTE_HOST"\n\
-xdebug.remote_connect_back = XDEBUG_REMOTE_CONNECT_BACK\n\
-' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && sed -i -e "s/XDEBUG_IDEKEY/${XDEBUG_IDEKEY}/" /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && sed -i -e "s/XDEBUG_REMOTE_HOST/${XDEBUG_REMOTE_HOST}/" /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && sed -i -e "s/XDEBUG_REMOTE_CONNECT_BACK/${XDEBUG_REMOTE_CONNECT_BACK}/" /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
-WORKDIR /var/www/dev-web
-
-RUN composer global require "laravel/installer"
-RUN composer require --dev barryvdh/laravel-debugbar
-
-# RUN /usr/sbin/setenforce Permissive
-
-# COPY ./local_setting/init.sh /etc/rc.d/init.sh
-
-# RUN chmod 777 /etc/rc.d/init.sh
+EXPOSE 9000
+WORKDIR /var/www/

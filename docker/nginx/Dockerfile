@@ -1,9 +1,8 @@
-FROM nginx:alpine
+FROM nginx:1.20-alpine
 
-ADD ./conf.d/* /etc/nginx/conf.d/
+RUN apk update && \
+    apk add --update --no-cache --virtual=.build-dependencies g++ && \
+    rm -r /var/cache/apk/*
 
-ARG VIRTUAL_HOST
-
-RUN sed -i -e "s/VIRTUAL_HOST/${VIRTUAL_HOST}/" /etc/nginx/conf.d/default.conf
-
-CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
+COPY ./docker/nginx/conf.d/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
