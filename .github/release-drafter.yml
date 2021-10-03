@@ -1,3 +1,5 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
@@ -9,4 +11,12 @@ categories:
       - 'bugfix'
       - 'bug'
   - title: '🧰 Maintenance'
-    label: 'chore'
+    labels:
+      - 'chore'
+change-title-escapes: '\<*_&'
+exclude-labels:
+  - 'exclude from changelog'
+template: |
+   ## Changes
+
+   $CHANGES
